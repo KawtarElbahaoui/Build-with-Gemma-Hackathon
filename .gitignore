@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environment
+venv/
+
+# Environment variables
+.env
+
+# Streamlit
+.streamlit/
+
+# VS Code
+.vscode/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Patient data
+patient_data/
+*.sqlite
+*.db
+
+# Python cache
+.pytest_cache/
