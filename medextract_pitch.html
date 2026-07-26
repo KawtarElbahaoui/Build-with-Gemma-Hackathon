@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>MedExtract — Pitch Hackathon</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-0:#081420;
+    --bg-1:#0d1d2e;
+    --bg-2:#112538;
+    --line:rgba(148,178,201,0.14);
+    --cyan:#3fd6c4;
+    --cyan-dim:rgba(63,214,196,0.35);
+    --coral:#ff7a6b;
+    --ink:#eef4f8;
+    --ink-dim:#9db2c4;
+    --ink-faint:#5d7387;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{
+    height:100%;
+    background:
+      linear-gradient(155deg, #050d16 0%, #0a1c2c 22%, #0c2436 42%, #0e3038 62%, #0a2b2e 80%, #061a1c 100%);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    overflow:hidden;
+  }
+  body::before{
+    content:"";
+    position:fixed;inset:0;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size:42px 42px;
+    opacity:0.18;
+    pointer-events:none;
+    z-index:0;
+  }
+  body::after{
+    content:"";
+    position:fixed;inset:0;
+    background:
+      radial-gradient(ellipse 1100px 700px at 10% 6%, rgba(63,214,196,0.20), transparent 58%),
+      radial-gradient(ellipse 950px 800px at 94% 96%, rgba(255,122,107,0.13), transparent 55%),
+      radial-gradient(ellipse 750px 950px at 55% 45%, rgba(63,214,196,0.07), transparent 65%);
+    pointer-events:none;
+    z-index:0;
+  }
+  .aura{
+    position:fixed; inset:-20%;
+    z-index:0;
+    pointer-events:none;
+    background:conic-gradient(from 0deg at 50% 50%,
+      rgba(63,214,196,0.10), rgba(10,26,40,0) 22%, rgba(255,122,107,0.07) 50%,
+      rgba(10,26,40,0) 72%, rgba(63,214,196,0.10) 100%);
+    animation:auraSpin 40s linear infinite;
+    mix-blend-mode:screen;
+  }
+  @keyframes auraSpin{ to{ transform:rotate(360deg); } }
+  .scanline{
+    position:fixed; left:0; right:0; top:0;
+    height:1px;
+    z-index:0;
+    pointer-events:none;
+    background:linear-gradient(90deg, transparent, rgba(63,214,196,0.55), transparent);
+    box-shadow:0 0 12px 1px rgba(63,214,196,0.35);
+    animation:scanMove 6.5s ease-in-out infinite;
+  }
+  @keyframes scanMove{
+    0%{ top:0; opacity:0; }
+    8%{ opacity:0.55; }
+    50%{ top:100%; opacity:0.35; }
+    92%{ opacity:0.55; }
+    100%{ top:100%; opacity:0; }
+  }
+
+  .deck{position:relative; width:100vw; height:100vh; z-index:1;}
+
+  .slide{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column;
+    justify-content:center;
+    padding:7vh 9vw;
+    opacity:0;
+    transform:translateX(var(--rest-x, 46px)) scale(0.97);
+    filter:blur(9px);
+    pointer-events:none;
+    transition:opacity 0.65s cubic-bezier(.22,.61,.36,1), transform 0.65s cubic-bezier(.22,.61,.36,1), filter 0.65s cubic-bezier(.22,.61,.36,1);
+  }
+  .slide.active{
+    opacity:1;
+    transform:translateX(0) scale(1);
+    filter:blur(0);
+    pointer-events:auto;
+  }
+
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12.5px;
+    letter-spacing:0.22em;
+    text-transform:uppercase;
+    color:var(--cyan);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:22px;
+    opacity:0;
+  }
+  .active .eyebrow{ animation:riseIn 0.6s 0.05s cubic-bezier(.22,.61,.36,1) forwards; }
+  .eyebrow .dot{
+    width:6px;height:6px;border-radius:50%;
+    background:var(--coral);
+    box-shadow:0 0 0 0 rgba(255,122,107,0.5);
+    animation:ping 1.8s infinite;
+  }
+
+  h1.title{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:clamp(40px,6.4vw,92px);
+    line-height:1.02;
+    letter-spacing:-0.02em;
+    max-width:16ch;
+    opacity:0;
+  }
+  .active h1.title{ animation:riseIn 0.7s 0.12s cubic-bezier(.22,.61,.36,1) forwards; }
+
+  h2.head{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;
+    font-size:clamp(30px,4vw,52px);
+    line-height:1.08;
+    letter-spacing:-0.01em;
+    max-width:18ch;
+    margin-bottom:8px;
+    opacity:0;
+  }
+  .active h2.head{ animation:riseIn 0.65s 0.1s cubic-bezier(.22,.61,.36,1) forwards; }
+
+  .lede{
+    font-size:clamp(16px,1.3vw,20px);
+    line-height:1.55;
+    color:var(--ink-dim);
+    max-width:52ch;
+    margin-top:20px;
+    opacity:0;
+  }
+  .active .lede{ animation:riseIn 0.65s 0.22s cubic-bezier(.22,.61,.36,1) forwards; }
+
+  @keyframes riseIn{ from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:translateY(0);} }
+  @keyframes ping{
+    0%{box-shadow:0 0 0 0 rgba(255,122,107,0.45);}
+    70%{box-shadow:0 0 0 9px rgba(255,122,107,0);}
+    100%{box-shadow:0 0 0 0 rgba(255,122,107,0);}
+  }
+
+  /* --- Signature ECG line --- */
+  .ecg-wrap{
+    position:absolute;
+    left:0; right:0; bottom:0;
+    height:150px;
+    overflow:hidden;
+    z-index:0;
+  }
+  .ecg-wrap svg{
+    position:absolute;
+    top:0; left:0;
+    height:100%;
+    width:220%;
+    animation:ecgScroll 9s linear infinite;
+  }
+  @keyframes ecgScroll{
+    from{ transform:translateX(0); }
+    to{ transform:translateX(-50%); }
+  }
+  .ecg-wrap path{
+    fill:none;
+    stroke:var(--cyan);
+    stroke-width:2;
+    opacity:0.55;
+    filter:drop-shadow(0 0 6px rgba(63,214,196,0.5));
+  }
+
+  /* --- Nav --- */
+  .nav{
+    position:fixed; bottom:28px; left:50%; transform:translateX(-50%);
+    display:flex; align-items:center; gap:18px;
+    z-index:10;
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .navbtn{
+    width:38px;height:38px;border-radius:50%;
+    border:1px solid rgba(148,178,201,0.3);
+    background:rgba(17,37,56,0.7);
+    backdrop-filter:blur(6px);
+    color:var(--ink);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    transition:border-color 0.2s, background 0.2s, transform 0.2s;
+  }
+  .navbtn:hover{ border-color:var(--cyan); background:rgba(63,214,196,0.12); transform:translateY(-1px); }
+  .navbtn svg{ width:16px; height:16px; }
+  .dots{ display:flex; gap:9px; }
+  .navdot{
+    width:7px; height:7px; border-radius:50%;
+    background:rgba(148,178,201,0.28);
+    cursor:pointer;
+    transition:background 0.25s, transform 0.25s;
+  }
+  .navdot.on{ background:var(--cyan); transform:scale(1.35); }
+  .counter{ color:var(--ink-faint); font-size:12px; letter-spacing:0.08em; min-width:44px; text-align:center;}
+
+  .brand{
+    position:fixed; top:28px; left:9vw; z-index:10;
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700; font-size:15px; letter-spacing:0.02em;
+    display:flex; align-items:center; gap:9px;
+    color:var(--ink-dim);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.4s ease;
+  }
+  .brand.show{ opacity:1; }
+  .brand .pulse-dot{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--cyan);
+    box-shadow:0 0 8px 2px var(--cyan-dim);
+  }
+
+  .progress-top{
+    position:fixed; top:0; left:0; height:2px;
+    background:linear-gradient(90deg, var(--cyan), var(--coral));
+    z-index:12;
+    transition:width 0.5s cubic-bezier(.22,.61,.36,1);
+  }
+
+  /* ===== Slide-specific layouts ===== */
+
+  /* Title slide */
+  #s0{ align-items:flex-start; }
+  #s0 .sub{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:14px;
+    color:var(--ink-faint);
+    margin-top:26px;
+    letter-spacing:0.04em;
+    opacity:0;
+  }
+  .active#s0 .sub{ animation:riseIn 0.65s 0.32s cubic-bezier(.22,.61,.36,1) forwards; }
+
+  /* two-column content rows */
+  .row{
+    display:flex;
+    gap:64px;
+    align-items:flex-start;
+    margin-top:8px;
+  }
+  .col{ flex:1; }
+
+  .cardlist{ display:flex; flex-direction:column; gap:0; margin-top:30px; max-width:640px;}
+  .cardlist .item{
+    display:flex; gap:20px;
+    padding:20px 0;
+    border-top:1px solid var(--line);
+    opacity:0;
+  }
+  .cardlist .item:last-child{ border-bottom:1px solid var(--line); }
+  .active .cardlist .item{ animation:riseIn 0.55s cubic-bezier(.22,.61,.36,1) forwards; }
+  .active .cardlist .item:nth-child(1){ animation-delay:0.3s; }
+  .active .cardlist .item:nth-child(2){ animation-delay:0.42s; }
+  .active .cardlist .item:nth-child(3){ animation-delay:0.54s; }
+  .item .mk{
+    font-family:'IBM Plex Mono',monospace;
+    color:var(--coral);
+    font-size:13px;
+    padding-top:2px;
+    min-width:26px;
+  }
+  .item .tx b{ font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:17px; display:block; margin-bottom:4px;}
+  .item .tx span{ color:var(--ink-dim); font-size:14.5px; line-height:1.5; }
+
+  /* solution slide - flow steps */
+  .flow{
+    display:flex;
+    align-items:center;
+    gap:0;
+    margin-top:44px;
+    flex-wrap:wrap;
+  }
+  .flow .step{
+    background:rgba(17,37,56,0.6);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:22px 24px;
+    width:210px;
+    opacity:0;
+  }
+  .active .flow .step{ animation:riseIn 0.55s cubic-bezier(.22,.61,.36,1) forwards; }
+  .active .flow .step:nth-child(1){ animation-delay:0.28s; }
+  .active .flow .step:nth-child(3){ animation-delay:0.42s; }
+  .active .flow .step:nth-child(5){ animation-delay:0.56s; }
+  .active .flow .step:nth-child(7){ animation-delay:0.7s; }
+  .flow .step .tag{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px; color:var(--cyan); letter-spacing:0.12em; text-transform:uppercase;
+  }
+  .flow .step h4{ font-family:'Space Grotesk',sans-serif; font-size:16.5px; margin:8px 0 6px; }
+  .flow .step p{ font-size:13px; color:var(--ink-dim); line-height:1.45; }
+  .flow .arrow{
+    width:34px; height:2px;
+    position:relative;
+    opacity:0;
+  }
+  .active .flow .arrow{ animation:riseIn 0.4s 0.5s forwards; }
+  .flow .arrow::before{
+    content:"";
+    position:absolute; inset:0;
+    background:linear-gradient(90deg, var(--cyan), transparent);
+  }
+  .flow .arrow::after{
+    content:"›";
+    position:absolute; right:-10px; top:50%; transform:translateY(-52%);
+    color:var(--cyan); font-size:18px;
+  }
+
+  /* impact stats */
+  .stats{
+    display:flex; gap:0; margin-top:40px;
+    flex-wrap:wrap;
+  }
+  .stat{
+    flex:1; min-width:200px;
+    padding:28px 30px 28px 0;
+    border-right:1px solid var(--line);
+    opacity:0;
+  }
+  .stat:last-child{ border-right:none; }
+  .active .stat{ animation:riseIn 0.55s cubic-bezier(.22,.61,.36,1) forwards; }
+  .active .stat:nth-child(1){ animation-delay:0.28s; }
+  .active .stat:nth-child(2){ animation-delay:0.4s; }
+  .active .stat:nth-child(3){ animation-delay:0.52s; }
+  .stat .num{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:clamp(38px,4vw,58px);
+    color:var(--cyan);
+    line-height:1;
+    display:flex; align-items:baseline; gap:2px;
+  }
+  .stat .num .unit{ font-size:0.45em; color:var(--coral); font-family:'IBM Plex Mono',monospace; }
+  .stat .lbl{ margin-top:12px; font-size:14px; color:var(--ink-dim); line-height:1.5; max-width:24ch; }
+
+  /* architecture */
+  .arch{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    align-items:stretch; gap:26px;
+    margin-top:54px;
+    max-width:920px;
+  }
+  .arch .blk{
+    background:rgba(17,37,56,0.55);
+    border:1px solid var(--line);
+    border-top:2px solid var(--cyan);
+    border-radius:16px;
+    padding:30px 26px;
+    opacity:0;
+    position:relative;
+  }
+  .arch .blk::after{
+    content:"";
+    position:absolute;
+    top:50%; right:-26px;
+    width:26px; height:2px;
+    background:linear-gradient(90deg, var(--cyan), transparent);
+    opacity:0.6;
+  }
+  .arch .blk:last-child::after{ display:none; }
+  .active .arch .blk{ animation:riseIn 0.5s cubic-bezier(.22,.61,.36,1) forwards; }
+  .active .arch .blk:nth-child(1){ animation-delay:0.26s; }
+  .active .arch .blk:nth-child(2){ animation-delay:0.4s; }
+  .active .arch .blk:nth-child(3){ animation-delay:0.54s; }
+  .arch .blk .step-mk{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px; letter-spacing:0.14em; color:var(--cyan); text-transform:uppercase;
+    margin-bottom:14px;
+  }
+  .arch .blk .ico{ font-size:26px; margin-bottom:14px; display:block; }
+  .arch .blk h4{ font-family:'Space Grotesk',sans-serif; font-size:18px; margin-bottom:10px; }
+  .arch .blk p{ font-size:13.5px; color:var(--ink-dim); line-height:1.55; }
+
+  /* sources slide */
+  .sources{
+    display:flex; flex-direction:column; gap:0;
+    margin-top:34px; max-width:720px;
+  }
+  .sources .src{
+    display:flex; flex-direction:column; gap:8px;
+    padding:20px 0;
+    border-top:1px solid var(--line);
+    opacity:0;
+  }
+  .sources .src:last-child{ border-bottom:1px solid var(--line); }
+  .active .sources .src{ animation:riseIn 0.5s cubic-bezier(.22,.61,.36,1) forwards; }
+  .active .sources .src:nth-child(1){ animation-delay:0.28s; }
+  .active .sources .src:nth-child(2){ animation-delay:0.4s; }
+  .active .sources .src:nth-child(3){ animation-delay:0.52s; }
+  .src-top{ display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; }
+  .src-tag{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px; letter-spacing:0.1em; text-transform:uppercase;
+    color:var(--coral);
+    border:1px solid rgba(255,122,107,0.35);
+    border-radius:20px;
+    padding:3px 10px;
+  }
+  .sources .src .lbl2{ font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:16.5px; color:var(--ink); }
+  .sources .src .val{
+    font-size:13.5px; color:var(--ink-dim); line-height:1.6; max-width:64ch;
+  }
+  .note{
+    margin-top:22px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px; color:var(--ink-faint);
+    opacity:0;
+  }
+  .active .note{ animation:riseIn 0.5s 0.62s forwards; }
+
+  /* thanks */
+  #s7{ align-items:center; text-align:center; }
+  #s7 .row, #s7 .contact{ align-self:center; }
+  #s7 h1.title{ max-width:none; }
+  .contact{
+    margin-top:34px;
+    display:flex; gap:34px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:14px; color:var(--ink-dim);
+    opacity:0;
+  }
+  .active .contact{ animation:riseIn 0.6s 0.35s forwards; }  @media print{
+    body{ overflow:visible !important; background:#0a1c2c !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .aura, .scanline, .nav, .brand, .progress-top{ display:none !important; }
+    .slide{
+      position:relative !important;
+      opacity:1 !important;
+      transform:none !important;
+      filter:none !important;
+      pointer-events:auto !important;
+      page-break-after:always;
+      break-after:page;
+      height:100vh;
+      width:100%;
+    }
+    .ecg-wrap svg{ animation:none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="aura"></div>
+<div class="scanline"></div>
+
+
+<div class="progress-top" id="progressTop" style="width:12.5%"></div>
+<div class="brand show" id="brand"><span class="pulse-dot"></span> MEDEXTRACT</div>
+
+<div class="deck">
+
+  <!-- SLIDE 0 — TITRE -->
+  <section class="slide active" id="s0">
+    <div class="eyebrow"><span class="dot"></span> HACKATHON — SANTÉ NUMÉRIQUE</div>
+    <h1 class="title">L'IA qui redonne au médecin le temps de soigner.</h1>
+    <div class="sub">MEDEXTRACT · Structuration intelligente des documents patients</div>
+    <div class="ecg-wrap"><svg viewBox="0 0 1600 150" preserveAspectRatio="none">
+      <path d="M0,75 L120,75 L145,75 L160,20 L180,130 L200,75 L260,75 L290,75 L310,40 L330,110 L350,75 L420,75 L800,75 L820,75 L845,75 L860,20 L880,130 L900,75 L960,75 L990,75 L1010,40 L1030,110 L1050,75 L1120,75 L1600,75"/>
+      <path d="M0,75 L120,75 L145,75 L160,20 L180,130 L200,75 L260,75 L290,75 L310,40 L330,110 L350,75 L420,75 L800,75 L820,75 L845,75 L860,20 L880,130 L900,75 L960,75 L990,75 L1010,40 L1030,110 L1050,75 L1120,75 L1600,75" transform="translate(800,0)"/>
+    </svg></div>
+  </section>
+
+  <!-- SLIDE 1 — PROBLEMATIQUE -->
+  <section class="slide" id="s1">
+    <div class="eyebrow"><span class="dot"></span> LE CONSTAT</div>
+    <h2 class="head">Trois patients, la même perte de temps.</h2>
+    <p class="lede">Chaque jour, patients et médecins perdent un temps précieux — un temps qui devrait servir au soin, pas à l'administratif.</p>
+    <div class="cardlist">
+      <div class="item"><div class="mk">01</div><div class="tx"><b>Se déplacer</b><span>Le patient traverse la ville pour une consultation qui dépend d'un dossier déjà existant, mais introuvable au bon moment.</span></div></div>
+      <div class="item"><div class="mk">02</div><div class="tx"><b>Attendre son tour</b><span>La salle d'attente s'allonge pendant que les équipes ressaisissent manuellement des documents déjà écrits.</span></div></div>
+      <div class="item"><div class="mk">03</div><div class="tx"><b>Réexpliquer un dossier connu</b><span>Le médecin redécouvre l'historique en consultation, au lieu de l'avoir déjà sous les yeux, structuré et prêt.</span></div></div>
+    </div>
+  </section>
+
+  <!-- SLIDE 2 — SOLUTION -->
+  <section class="slide" id="s2">
+    <div class="eyebrow"><span class="dot"></span> NOTRE SOLUTION</div>
+    <h2 class="head">Structurer chaque document dès son arrivée.</h2>
+    <p class="lede">MedExtract transforme les documents patients (ordonnances, analyses, comptes-rendus) en données structurées et fiables — sans jamais interpréter une décision clinique à la place du médecin.</p>
+    <div class="flow">
+      <div class="step"><div class="tag">Entrée</div><h4>Document brut</h4><p>Photo, scan ou PDF d'un document médical, envoyé depuis le labo ou l'accueil.</p></div>
+      <div class="arrow"></div>
+      <div class="step"><div class="tag">IA</div><h4>Extraction sécurisée</h4><p>Le contenu est reconnu et structuré automatiquement, champ par champ.</p></div>
+      <div class="arrow"></div>
+      <div class="step"><div class="tag">Médecin</div><h4>Validation en un clic</h4><p>Le praticien vérifie et valide — il ne ressaisit plus jamais rien.</p></div>
+      <div class="arrow"></div>
+      <div class="step"><div class="tag">Résultat</div><h4>Dossier prêt</h4><p>L'historique du patient est immédiatement disponible et à jour.</p></div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3 — VISION -->
+  <section class="slide" id="s3">
+    <div class="eyebrow"><span class="dot"></span> NOTRE VISION</div>
+    <h2 class="head">Le dossier patient qui suit, partout où il va.</h2>
+    <p class="lede">Nous voulons faire de MedExtract le langage commun entre laboratoires, cliniques et hôpitaux — un dossier structuré, sécurisé, qui accompagne le patient au lieu de rester bloqué dans un tiroir ou un système isolé.</p>
+    <div class="row" style="margin-top:44px;">
+      <div class="col">
+        <h4 style="font-family:'Space Grotesk',sans-serif;font-size:17px;color:var(--cyan);margin-bottom:8px;">Court terme</h4>
+        <p style="color:var(--ink-dim);font-size:14.5px;line-height:1.55;">Équiper un premier réseau de cliniques et laboratoires partenaires au Maroc.</p>
+      </div>
+      <div class="col">
+        <h4 style="font-family:'Space Grotesk',sans-serif;font-size:17px;color:var(--coral);margin-bottom:8px;">Long terme</h4>
+        <p style="color:var(--ink-dim);font-size:14.5px;line-height:1.55;">Devenir la référence régionale de structuration sécurisée des données de santé.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4 — IMPACT -->
+  <section class="slide" id="s4">
+    <div class="eyebrow"><span class="dot"></span> L'IMPACT</div>
+    <h2 class="head">Le temps gagné se mesure en soin, pas en minutes.</h2>
+    <div class="stats">
+      <div class="stat"><div class="num" data-count="70"><span class="v">0</span><span class="unit">%</span></div><div class="lbl">de temps administratif en moins pour les équipes médicales</div></div>
+      <div class="stat"><div class="num" data-count="0"><span class="v">0</span><span class="unit">ressaisie</span></div><div class="lbl">le médecin valide, il ne recopie plus jamais un document</div></div>
+      <div class="stat"><div class="num" data-count="100"><span class="v">0</span><span class="unit">% sécurisé</span></div><div class="lbl">aucune donnée clinique n'est interprétée sans validation humaine</div></div>
+    </div>
+  </section>
+
+  <!-- SLIDE 5 — ARCHITECTURE -->
+  <section class="slide" id="s5">
+    <div class="eyebrow"><span class="dot"></span> ARCHITECTURE</div>
+    <h2 class="head">Une chaîne simple, pensée pour la confiance.</h2>
+    <div class="arch">
+      <div class="blk"><div class="step-mk">Étape 1</div><h4>Capture</h4><p>Scan, photo ou import du document à l'accueil ou au laboratoire.</p></div>
+      <div class="blk"><div class="step-mk">Étape 2</div><h4>Extraction IA</h4><p>Reconnaissance et structuration automatique du contenu médical.</p></div>
+      <div class="blk"><div class="step-mk">Étape 3</div><h4>Validation médecin</h4><p>Interface de vérification finale avant enregistrement définitif.</p></div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6 — SOURCES -->
+  <section class="slide" id="s6">
+    <div class="eyebrow"><span class="dot"></span> SOURCES & MÉTHODE</div>
+    <h2 class="head" style="max-width:none; white-space:nowrap;">D'où viennent nos chiffres.</h2>
+    <p class="lede">Les estimations d'impact sont indicatives : elles combinent observations de terrain, hypothèses de conception du produit et benchmarks publiés sur la structuration documentaire par IA en santé.</p>
+    <div class="sources">
+      <div class="src">
+        <div class="src-top">
+          <span class="src-tag">Benchmark secteur</span>
+          <span class="lbl2">70% de temps administratif en moins</span>
+        </div>
+        <span class="val">Fourchette observée dans des déploiements comparables d'extraction automatique de documents (labo, imagerie, comptes-rendus), où la saisie manuelle représente une part majeure du temps non clinique des équipes.</span>
+      </div>
+      <div class="src">
+        <div class="src-top">
+          <span class="src-tag">Logique produit</span>
+          <span class="lbl2">0 ressaisie manuelle</span>
+        </div>
+        <span class="val">Conséquence directe du flux MedExtract : une fois le document structuré par l'IA, le médecin valide ou corrige — il ne retranscrit plus jamais un champ déjà extrait.</span>
+      </div>
+      <div class="src">
+        <div class="src-top">
+          <span class="src-tag">Principe de conception</span>
+          <span class="lbl2">100% de validation humaine</span>
+        </div>
+        <span class="val">Choix d'architecture assumé dès le départ : aucune donnée clinique n'est enregistrée sans qu'un médecin l'ait explicitement validée — l'IA structure, elle ne décide jamais.</span>
+      </div>
+    </div>
+    <p class="note">Ces chiffres seront affinés et mesurés en conditions réelles lors des premiers déploiements pilotes.</p>
+  </section>
+
+  <!-- SLIDE 7 — MERCI -->
+  <section class="slide" id="s7">
+    <h1 class="title">Merci pour votre attention !</h1>
+    <div class="sub" style="margin-top:18px;">MedExtract</div>
+    <div class="contact">
+      <span>ENSA Berrechid</span><span>GDG & AI Crafters</span>
+    </div>
+  </section>
+
+</div>
+
+<div class="nav">
+  <div class="navbtn" onclick="go(-1)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+  </div>
+  <div class="dots" id="dotsWrap"></div>
+  <div class="navbtn" onclick="go(1)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+  </div>
+  <div class="counter" id="counter">01 / 08</div>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  let current = 0;
+
+  const dotsWrap = document.getElementById('dotsWrap');
+  slides.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'navdot' + (i === 0 ? ' on' : '');
+    d.onclick = () => render(i);
+    dotsWrap.appendChild(d);
+  });
+  const dots = document.querySelectorAll('.navdot');
+
+  function animateStats(slideEl){
+    slideEl.querySelectorAll('.stat .num').forEach(numEl=>{
+      const target = parseInt(numEl.getAttribute('data-count'), 10);
+      const vEl = numEl.querySelector('.v');
+      let startTime = null;
+      const duration = 900;
+      function step(ts){
+        if(!startTime) startTime = ts;
+        const progress = Math.min((ts - startTime) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        vEl.textContent = Math.round(eased * target);
+        if(progress < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    });
+  }
+
+  const brandEl = document.getElementById('brand');
+
+  function render(i){
+    if(i < 0 || i >= total) return;
+    slides.forEach((s, idx) => {
+      s.style.setProperty('--rest-x', idx < i ? '-46px' : '46px');
+    });
+    slides[current].classList.remove('active');
+    current = i;
+    slides[current].classList.add('active');
+    dots.forEach((d, idx) => d.classList.toggle('on', idx === current));
+    document.getElementById('counter').textContent =
+      String(current+1).padStart(2,'0') + ' / ' + String(total).padStart(2,'0');
+    document.getElementById('progressTop').style.width = ((current+1)/total*100) + '%';
+    brandEl.classList.toggle('show', slides[current].id === 's0');
+    if(slides[current].id === 's4') setTimeout(()=>animateStats(slides[current]), 150);
+  }
+
+  function go(delta){ render(current + delta); }
+
+  document.addEventListener('keydown', (e) => {
+    if(['ArrowRight','ArrowDown',' ','PageDown'].includes(e.key)){ e.preventDefault(); go(1); }
+    if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){ e.preventDefault(); go(-1); }
+  });
+
+  let touchStartX = 0;
+  document.addEventListener('touchstart', e => touchStartX = e.touches[0].clientX);
+  document.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if(Math.abs(dx) > 60) go(dx < 0 ? 1 : -1);
+  });
+</script>
+
+</body>
+</html>
