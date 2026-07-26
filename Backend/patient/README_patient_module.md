@@ -1,6 +1,7 @@
 # Module 3 — Données Patient & Mode Urgence
 
 ## Fonctionnalités
+- Enregistrement d'un nouveau patient (génère un patient_id)
 - Stockage de l'historique médical (JSON persistant sur disque)
 - Mode urgence : allergies, traitements en cours, contact d'urgence
 - Lien vers l'hôpital le plus proche (à partir de coordonnées GPS)
@@ -22,7 +23,15 @@ pip install qrcode[pil]
 ## Utilisation
 
 ```python
-from patient_module import get_urgence_data, sauvegarder_document, retrieve_relevant_docs
+from patient_module import enregistrer_nouveau_patient, get_urgence_data, sauvegarder_document, retrieve_relevant_docs
+
+# Enregistrer un nouveau patient
+nouveau = enregistrer_nouveau_patient(
+    identite={"nom": "Chraibi", "prenom": "Salma", "date_naissance": "1998-09-10", "sexe": "F"},
+    allergies=["Aspirine"],
+    contact_urgence={"nom": "Hicham Chraibi", "lien": "Frère", "telephone": "+212600000004"}
+)
+patient_id = nouveau["patient_id"]  # ex: "P004"
 
 # Consulter les données d'urgence d'un patient
 urgence = get_urgence_data("P001")

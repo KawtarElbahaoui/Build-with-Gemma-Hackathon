@@ -102,6 +102,42 @@ PATIENTS_DB = charger_patients_db()
 # Fonctions principales
 # ---------------------------------------------------------------------------
 
+def enregistrer_nouveau_patient(identite: dict, allergies: list = None, traitements_en_cours: list = None,
+                                  contact_urgence: dict = None) -> dict:
+    """
+    Enregistre un nouveau patient et retourne son patient_id généré.
+
+    identite : {"nom": str, "prenom": str, "date_naissance": str, "sexe": str} — requis
+    allergies : liste de strings, ex: ["Pénicilline"] — optionnel, [] par défaut
+    traitements_en_cours : liste de dicts {"nom", "dose", "frequence_par_jour"} — optionnel, [] par défaut
+    contact_urgence : {"nom": str, "lien": str, "telephone": str} — optionnel, requis pour le mode urgence
+
+    Retourne {"succes": True, "patient_id": "P004"} ou {"succes": False, "erreur": "..."}
+    """
+    if not identite or not identite.get("nom") or not identite.get("prenom"):
+        return {"succes": False, "erreur": "Nom et prénom sont obligatoires"}
+
+    # Génère un nouvel ID séquentiel (P001, P002, ... continue après le dernier existant)
+    numeros_existants = [
+        int(pid[1:]) for pid in PATIENTS_DB.keys()
+        if pid.startswith("P") and pid[1:].isdigit()
+    ]
+    nouveau_numero = max(numeros_existants, default=0) + 1
+    nouveau_id = f"P{nouveau_numero:03d}"
+
+    PATIENTS_DB[nouveau_id] = {
+        "patient_id": nouveau_id,
+        "identite": identite,
+        "allergies": allergies or [],
+        "traitements_en_cours": traitements_en_cours or [],
+        "contact_urgence": contact_urgence or {"nom": "", "lien": "", "telephone": ""},
+        "historique_documents": []
+    }
+    sauvegarder_patients_db(PATIENTS_DB)
+
+    return {"succes": True, "patient_id": nouveau_id}
+
+
 def get_urgence_data(patient_id: str) -> dict:
     """Retourne les données critiques d'urgence : allergies, traitements, contact d'urgence."""
     patient = PATIENTS_DB.get(patient_id)
@@ -252,6 +288,20 @@ def generer_qr_code_patient(patient_id: str, base_url: str = "http://localhost:5
 
 TOOLS_PATIENT = [
     {
+        "name": "enregistrer_nouveau_patient",
+        "description": "Enregistre un nouveau patient dans le système et retourne son identifiant (patient_id) généré.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "identite": {"type": "object", "description": "nom, prenom, date_naissance, sexe"},
+                "allergies": {"type": "array", "items": {"type": "string"}},
+                "traitements_en_cours": {"type": "array", "items": {"type": "object"}},
+                "contact_urgence": {"type": "object", "description": "nom, lien, telephone"}
+            },
+            "required": ["identite"]
+        }
+    },
+    {
         "name": "get_urgence_data",
         "description": "Récupère les allergies, traitements en cours et contact d'urgence d'un patient. À utiliser en priorité en mode urgence.",
         "parameters": {
@@ -300,6 +350,7 @@ TOOLS_PATIENT = [
 ]
 
 TOOL_DISPATCHER = {
+    "enregistrer_nouveau_patient": enregistrer_nouveau_patient,
     "get_urgence_data": get_urgence_data,
     "retrieve_relevant_docs": retrieve_relevant_docs,
     "sauvegarder_document": sauvegarder_document,
@@ -320,6 +371,16 @@ def executer_tool_call(nom_tool: str, arguments: dict):
 # ---------------------------------------------------------------------------
 
 def _run_tests():
+    r_nouveau = enregistrer_nouveau_patient(
+        identite={"nom": "Test", "prenom": "Nouveau", "date_naissance": "1990-01-01", "sexe": "M"},
+        allergies=["Test allergie"],
+        contact_urgence={"nom": "Contact Test", "lien": "Ami", "telephone": "+212600000099"}
+    )
+    assert r_nouveau["succes"] is True
+    assert r_nouveau["patient_id"] in PATIENTS_DB
+    assert enregistrer_nouveau_patient(identite={}).get("succes") is False
+    print("✅ enregistrer_nouveau_patient OK")
+
     result = get_urgence_data("P002")
     assert result["patient_id"] == "P002"
     assert "Iode" in result["allergies"]

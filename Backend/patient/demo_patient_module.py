@@ -9,6 +9,7 @@ Lancer avec : python demo_patient_module.py
 """
 
 from patient_module import (
+    enregistrer_nouveau_patient,
     get_urgence_data,
     sauvegarder_document,
     retrieve_relevant_docs,
@@ -20,6 +21,16 @@ from patient_module import (
 )
 
 print("=" * 60)
+print("SCÉNARIO 0 — Enregistrement d'un nouveau patient")
+print("=" * 60)
+nouveau = enregistrer_nouveau_patient(
+    identite={"nom": "Chraibi", "prenom": "Salma", "date_naissance": "1998-09-10", "sexe": "F"},
+    allergies=["Aspirine"],
+    contact_urgence={"nom": "Hicham Chraibi", "lien": "Frère", "telephone": "+212600000004"}
+)
+print(f"Nouveau patient enregistré : {nouveau}")
+
+print("\n" + "=" * 60)
 print("SCÉNARIO 1 — Mode urgence : consultation rapide")
 print("=" * 60)
 urgence = get_urgence_data("P002")
