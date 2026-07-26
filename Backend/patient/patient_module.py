@@ -177,6 +177,25 @@ def sauvegarder_document(patient_id: str, data_extraite: dict) -> dict:
     return {"succes": True, "document_id": document["document_id"]}
 
 
+def valider_rapport(patient_id: str, medecin_validateur: str) -> dict:
+    """
+    Marque le dossier d'un patient comme validé par un médecin/professionnel de santé
+    (clinique ou hôpital). Utilisé une fois que les résultats d'analyses et/ou
+    l'ordonnance générée ont été relus et confirmés par un professionnel.
+    """
+    patient = PATIENTS_DB.get(patient_id)
+    if patient is None:
+        return {"succes": False, "erreur": "Patient introuvable"}
+    if not medecin_validateur:
+        return {"succes": False, "erreur": "Le nom du médecin validateur est requis"}
+
+    patient["rapport_valide"] = True
+    patient["valide_par"] = medecin_validateur
+    patient["date_validation"] = datetime.now().strftime("%Y-%m-%d %H:%M")
+    sauvegarder_patients_db(PATIENTS_DB)
+    return {"succes": True}
+
+
 def _date_pour_tri(doc: dict) -> datetime:
     """Renvoie date_document (JJ/MM/AAAA) si présente et non-null, sinon date_ajout en secours."""
     date_doc = doc["contenu"].get("date_document")
@@ -337,6 +356,18 @@ TOOLS_PATIENT = [
         }
     },
     {
+        "name": "valider_rapport",
+        "description": "Marque le dossier d'un patient comme validé par un médecin ou une clinique/hôpital, après relecture des résultats/ordonnance générés.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "patient_id": {"type": "string", "description": "Identifiant du patient (ex: P001)"},
+                "medecin_validateur": {"type": "string", "description": "Nom du médecin ou professionnel qui valide"}
+            },
+            "required": ["patient_id", "medecin_validateur"]
+        }
+    },
+    {
         "name": "generer_qr_code_patient",
         "description": "Génère un QR code encodant l'URL vers la fiche d'un patient, à faire scanner par un médecin.",
         "parameters": {
@@ -354,6 +385,7 @@ TOOL_DISPATCHER = {
     "get_urgence_data": get_urgence_data,
     "retrieve_relevant_docs": retrieve_relevant_docs,
     "sauvegarder_document": sauvegarder_document,
+    "valider_rapport": valider_rapport,
     "generer_qr_code_patient": generer_qr_code_patient
 }
 
@@ -399,6 +431,13 @@ def _run_tests():
     assert isinstance(resultats, list)
     assert retrieve_relevant_docs("xyzabc123inexistant", "P002") == []
     print("✅ retrieve_relevant_docs OK")
+
+    r_val = valider_rapport("P001", "Dr. Zineb Bouabidi")
+    assert r_val["succes"] is True
+    assert PATIENTS_DB["P001"]["rapport_valide"] is True
+    assert valider_rapport("P999", "Dr. Test")["succes"] is False
+    assert valider_rapport("P001", "")["succes"] is False
+    print("✅ valider_rapport OK")
 
     lien = construire_lien_hopital_urgence(33.5731, -7.5898)
     assert lien.startswith("https://www.google.com/maps/search/hopital+urgence/@")

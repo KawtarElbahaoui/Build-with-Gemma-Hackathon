@@ -7,6 +7,7 @@
 - Lien vers l'hôpital le plus proche (à partir de coordonnées GPS)
 - Rappels de médicaments (horaires calculés selon la fréquence de prise)
 - Recherche par mots-clés dans l'historique, triée par date
+- Validation d'un dossier/rapport par un médecin ou une clinique/hôpital
 - QR code pour accès rapide au dossier patient (à scanner par un médecin)
 - Connexion aux tools de l'agent (function calling, format Gemini/Gemma)
 

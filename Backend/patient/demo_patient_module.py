@@ -12,6 +12,7 @@ from patient_module import (
     enregistrer_nouveau_patient,
     get_urgence_data,
     sauvegarder_document,
+    valider_rapport,
     retrieve_relevant_docs,
     construire_lien_hopital_urgence,
     calculer_horaires_prise,
@@ -58,6 +59,12 @@ document_extrait = {
 }
 resultat = sauvegarder_document("P002", document_extrait)
 print(f"Document enregistré : {resultat}")
+
+print("\n" + "=" * 60)
+print("SCÉNARIO 2bis — Validation par un médecin/clinique")
+print("=" * 60)
+validation = valider_rapport("P002", "Dr. Zineb Bouabidi")
+print(f"Rapport validé : {validation}")
 
 print("\n" + "=" * 60)
 print("SCÉNARIO 3 — Recherche dans l'historique")
