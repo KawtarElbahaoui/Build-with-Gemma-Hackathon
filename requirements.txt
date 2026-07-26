@@ -1,7 +1,0 @@
-streamlit>=1.32
-streamlit-option-menu
-streamlit-mic-recorder
-streamlit-js-eval
-streamlit-extras
-Pillow
-requests
