@@ -13,7 +13,7 @@ from ui import (
 
 st.set_page_config(
     page_title="Sehati",
-    layout="centered",
+    layout="wide",
     initial_sidebar_state="collapsed",
 )
 

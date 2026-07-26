@@ -12,12 +12,8 @@ MOCK_MEDS = [
 
 def render():
     lang = st.session_state.lang
-   
 
-    st.markdown(
-        f"<h2 style='font-size:28px; margin:16px 0 24px;'>{t('meds_title', lang)}</h2>",
-        unsafe_allow_html=True,
-    )
+    st.markdown(f'<h2 class="section-headline">{t("meds_title", lang)}</h2>', unsafe_allow_html=True)
 
     for i, med in enumerate(MOCK_MEDS):
         _med_card(med, lang, key=f"med_{i}")
@@ -30,8 +26,7 @@ def _med_card(med, lang, key):
         card_class = "med-card taken"
         status_html = f'<div class="med-status-circle done">{check(size=18, color="#FFFFFF")}</div>'
         footer = f"""
-        <div style="display:flex; align-items:center; gap:6px; color:#5C8B6E;
-                    font-size:14px; font-weight:600; margin-top:12px;">
+        <div class="med-footer med-footer-taken">
             {clock(size=16, color="#5C8B6E")} {t('taken_today', lang)}
         </div>
         """
@@ -39,23 +34,22 @@ def _med_card(med, lang, key):
         card_class = "med-card"
         status_html = '<div class="med-status-circle"></div>'
         footer = f"""
-        <div style="display:flex; align-items:center; gap:6px; color:#D9705B;
-                    font-size:14px; font-weight:600; margin-top:8px; margin-bottom:12px;">
-            {clock(size=16, color="#D9705B")} {t('next_dose_in', lang)} {t('hours', lang)}
+        <div class="med-footer med-footer-pending">
+            {clock(size=16, color="#C4623E")} {t('next_dose_in', lang)} {t('hours', lang)}
         </div>
         """
 
     st.markdown(
         f"""
         <div class="{card_class}">
-            <div style="display:flex; align-items:flex-start; gap:14px;">
+            <div class="med-card-inner">
                 {status_html}
-                <div style="flex:1;">
-                    <div style="display:flex; justify-content:space-between; align-items:baseline;">
-                        <div style="font-size:20px; font-weight:700; color:#8B5A3C;">{med['name']}</div>
-                        <div style="font-size:14px; color:#D9705B; font-weight:600;">{med['dosage']}</div>
+                <div class="med-content">
+                    <div class="med-header">
+                        <div class="med-name">{med['name']}</div>
+                        <div class="med-dosage">{med['dosage']}</div>
                     </div>
-                    <div style="font-size:14px; color:#A67456; margin-top:4px;">{schedule_label}</div>
+                    <div class="med-schedule">{schedule_label}</div>
                     {footer}
                 </div>
             </div>

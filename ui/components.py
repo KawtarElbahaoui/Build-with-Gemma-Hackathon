@@ -30,6 +30,24 @@ def load_css():
                 .block-container { text-align: right; }
                 h1, h2, h3, h4 { font-family: 'Cairo', sans-serif !important; }
                 p, div, span, li { font-family: 'Cairo', sans-serif; }
+
+                /* RTL-specific layout mirroring */
+                .app-header-brand { flex-direction: row-reverse; justify-content: flex-end; }
+                .hero-wrap, .hero-title, .hero-tagline,
+                .mission-card, .step-card, .split-left, .mint-cta-text { text-align: right; }
+                .hero-eyebrow-row { flex-direction: row-reverse; justify-content: flex-start; }
+                .trust-strip { justify-content: flex-start; }
+                .app-footer-row { flex-direction: row-reverse; }
+
+                /* New screens RTL support */
+                .emergency-banner, .emergency-banner-large { flex-direction: row-reverse; }
+                .action-card, .recent-activity, .onboard-illustration,
+                .onboard-title, .onboard-subtitle, .onboard-progress-dots,
+                .chat-empty-state, .emergency-info-card, .doc-row,
+                .empty-state, .med-card-inner { text-align: right; }
+                .doc-icon { margin-left: 14px; margin-right: 0; }
+                .med-status-circle { margin-left: 14px; margin-right: 0; }
+                .med-header { flex-direction: row-reverse; }
             </style>
             """,
             unsafe_allow_html=True,
@@ -54,13 +72,16 @@ def app_header(show_nav: bool = True):
     with col_brand:
         st.markdown(
             f"""
-            <div class="app-header-brand">
+            <div class="app-header-brand brand-clickable-anchor">
                 <div class="dot">S</div>
                 <div class="name">{t('app_name', lang)}</div>
             </div>
             """,
             unsafe_allow_html=True,
         )
+        if st.button(" ", key="brand_home", help="Home"):
+            st.session_state.page = "home"
+            st.rerun()
 
     if show_nav:
         nav_pairs = [

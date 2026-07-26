@@ -6,15 +6,9 @@ from ui.components import profile_greeting
 
 def render():
     lang = st.session_state.lang
-    # header is now global via app.py
 
-    st.markdown(
-        f"""
-        <h2 style="font-size:28px; margin:16px 0 8px;">{t('upload_title', lang)}</h2>
-        <p style="font-size:16px; color:#A67456; margin:0 0 24px;">{t('upload_help', lang)}</p>
-        """,
-        unsafe_allow_html=True,
-    )
+    st.markdown(f'<h2 class="section-headline">{t("upload_title", lang)}</h2>', unsafe_allow_html=True)
+    st.markdown(f'<p>{t("upload_help", lang)}</p>', unsafe_allow_html=True)
 
     uploaded = st.file_uploader(
         t("upload_button", lang),
@@ -30,7 +24,7 @@ def render():
         _show_validation(extracted, uploaded, lang)
 
 def _show_validation(data, image_file, lang):
-    st.markdown(f"<h3 style='margin-top:24px;'>{t('review_title', lang)}</h3>", unsafe_allow_html=True)
+    st.markdown(f'<h3 class="section-headline" style="font-size:32px;">{t("review_title", lang)}</h3>', unsafe_allow_html=True)
     col_img, col_form = st.columns(2)
     with col_img:
         st.image(Image.open(image_file), use_container_width=True)

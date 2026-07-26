@@ -110,8 +110,10 @@ def _render_landing_header(lang):
             st.session_state.page = "splash"
             st.rerun()
     with col_how:
-        if st.button(s("nav_how", lang), key="lp_how", type="secondary"):
-            st.rerun()  # already on splash — rerun scrolls to top
+        st.markdown(
+            f'<a href="#how-it-works" class="nav-anchor">{s("nav_how", lang)}</a>',
+            unsafe_allow_html=True,
+        )
     with col_chat:
         if st.button(s("nav_chat", lang), key="lp_chat", type="secondary"):
             st.session_state.page = "chat"
@@ -121,7 +123,7 @@ def _render_landing_header(lang):
             st.session_state.lang = other_lang
             st.rerun()
     with col_cta:
-        if st.button(t("get_started", lang), key="lp_cta"):   # primary (filled rust)
+        if st.button(t("get_started", lang), key="lp_cta", type="primary"):   # primary (filled rust)
             st.session_state.page = "onboard"
             st.rerun()
 
@@ -143,7 +145,6 @@ def _render_hero(lang):
     st.markdown(
         f"""
         <div class="hero-wrap">
-            <div class="hero-decoration"></div>
             <div class="hero-eyebrow-row">
                 <div class="hero-eyebrow-icon">{pulse_svg}</div>
                 <div class="section-eyebrow" style="margin:0;">
@@ -160,9 +161,9 @@ def _render_hero(lang):
     )
 
     # CTAs — narrow columns on the left keep them left-aligned + naturally sized
-    c1, c2, _spacer = st.columns([1.2, 1.4, 6])
+    c1, c2, _spacer = st.columns([1.4, 1.8, 4])
     with c1:
-        if st.button(t("get_started", lang), key="hero_start"):     # primary
+        if st.button(t("get_started", lang), key="hero_start", type="primary"):     # primary
             st.session_state.page = "onboard"
             st.rerun()
     with c2:
@@ -194,7 +195,7 @@ def _render_mission(lang):
 def _render_how_it_works(lang):
     st.markdown(
         f"""
-        <div class="how-header">
+        <div class="how-header" id="how-it-works">
             <div class="section-eyebrow">{t('how_eyebrow', lang)}</div>
             <h2 class="section-headline">{t('how_headline', lang)}</h2>
         </div>
@@ -306,7 +307,7 @@ def _render_final_cta(lang):
             unsafe_allow_html=True,
         )
     with c_btn:
-        if st.button(t("final_cta_button", lang), key="final_cta"):
+        if st.button(t("final_cta_button", lang), key="final_cta", type="primary"):
             st.session_state.page = "onboard"
             st.rerun()
 

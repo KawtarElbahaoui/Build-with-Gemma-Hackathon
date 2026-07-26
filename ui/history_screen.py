@@ -19,12 +19,8 @@ MOCK_DOCS = [
 
 def render():
     lang = st.session_state.lang
-    
 
-    st.markdown(
-        f"<h2 style='font-size:28px; margin:16px 0 20px;'>{t('history_title', lang)}</h2>",
-        unsafe_allow_html=True,
-    )
+    st.markdown(f'<h2 class="section-headline">{t("history_title", lang)}</h2>', unsafe_allow_html=True)
 
     # Filter chips
     if "history_filter" not in st.session_state:
@@ -57,11 +53,11 @@ def render():
 
     # Icon + tag styling per type
     type_meta = {
-        "prescription": {"icon": file_text(size=22, color="#D9705B"), "bg": "#FCE0DA",
+        "prescription": {"icon": file_text(size=22, color="#C4623E"), "bg": "var(--rust-light)",
                           "tag_key": "type_prescription", "tag_class": "tag-prescription"},
-        "lab": {"icon": flask(size=22, color="#5C8B6E"), "bg": "#E0EDE4",
+        "lab": {"icon": flask(size=22, color="#5C8B6E"), "bg": "var(--sage)",
                 "tag_key": "type_lab", "tag_class": "tag-lab"},
-        "note": {"icon": note(size=22, color="#8A6BB0"), "bg": "#ECE4F0",
+        "note": {"icon": note(size=22, color="#8A6BB0"), "bg": "var(--lavender)",
                  "tag_key": "type_note", "tag_class": "tag-note"},
     }
 
@@ -70,18 +66,12 @@ def render():
         st.markdown(
             f"""
             <div class="doc-row">
-                <div style="width:44px; height:44px; border-radius:12px;
-                            background:{meta['bg']}; display:flex;
-                            align-items:center; justify-content:center;">
+                <div class="doc-icon" style="background:{meta['bg']};">
                     {meta['icon']}
                 </div>
-                <div style="flex:1;">
-                    <div style="font-size:16px; font-weight:600; color:#8B5A3C; margin-bottom:2px;">
-                        {doc['doctor']}
-                    </div>
-                    <div style="font-size:13px; color:#A67456; margin-bottom:6px;">
-                        {doc['date']} · {doc['summary']}
-                    </div>
+                <div class="doc-content">
+                    <div class="doc-doctor">{doc['doctor']}</div>
+                    <div class="doc-meta">{doc['date']} · {doc['summary']}</div>
                     <span class="doc-tag {meta['tag_class']}">{t(meta['tag_key'], lang)}</span>
                 </div>
             </div>
@@ -92,10 +82,9 @@ def render():
     if not docs:
         st.markdown(
             f"""
-            <div style="background:rgba(255,255,255,0.5); border-radius:16px;
-                        padding:32px; text-align:center; color:#A67456;">
-                <div style="margin-bottom:12px;">{file_text(size=32, color="#A67456")}</div>
-                <div style="font-size:15px;">{t('no_documents', lang)}</div>
+            <div class="empty-state">
+                <div class="empty-icon">{file_text(size=32, color="var(--ink-muted)")}</div>
+                <div class="empty-text">{t('no_documents', lang)}</div>
             </div>
             """,
             unsafe_allow_html=True,
